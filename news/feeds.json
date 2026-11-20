@@ -1,0 +1,17 @@
+{
+  "note": "Public feeds for the riverside news board. Before you enable a feed, open its URL and check that it returns RSS or Atom, and read the source's terms of use.",
+  "feeds": [
+    {
+      "source": "EIA",
+      "url": "https://www.eia.gov/rss/todayinenergy.xml",
+      "enabled": true,
+      "checked": "Verified RSS from https://www.eia.gov/tools/rssfeeds/. Reuse policy: https://www.eia.gov/about/copyrights_reuse.php."
+    },
+    {
+      "source": "Federal Reserve",
+      "url": "https://www.federalreserve.gov/feeds/press_all.xml",
+      "enabled": true,
+      "checked": "Verified All Press Releases RSS from https://www.federalreserve.gov/feeds/. Reuse policy: https://www.federalreserve.gov/disclaimer.htm."
+    }
+  ]
+}
