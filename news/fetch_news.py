@@ -25,6 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+RSS1 = "{http://purl.org/rss/1.0/}"
+DC = "{http://purl.org/dc/elements/1.1/}"
 ATOM = "{http://www.w3.org/2005/Atom}"
 UA = "KRM-After-Hours/1.0 (+https://kazirafsanmahboob.host.dartmouth.edu/)"
 
@@ -52,6 +54,8 @@ def read_feed(url, timeout=20):
     items = []
     for it in root.iter("item"):  # RSS 2.0
         items.append((it.findtext("title"), it.findtext("link"), parse_date(it.findtext("pubDate"))))
+    for it in root.iter(RSS1 + "item"):
+        items.append((it.findtext(RSS1 + "title"), it.findtext(RSS1 + "link"), parse_date(it.findtext(DC + "date"))))
     for it in root.iter(ATOM + "entry"):  # Atom
         link = it.find(ATOM + "link")
         href = link.get("href") if link is not None else None
@@ -69,7 +73,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--feeds", default=str(HERE / "feeds.json"))
     ap.add_argument("--out", required=True)
-    ap.add_argument("--max-items", type=int, default=8)
+    ap.add_argument("--max-items", type=int, default=16)
     ap.add_argument("--per-feed", type=int, default=4)
     args = ap.parse_args()
 
@@ -89,6 +93,7 @@ def main():
         items.sort(key=lambda i: i["published"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
         for i in items[: args.per_feed]:
             i["source"] = f["source"]
+            i["topic"] = f["topic"]
             collected.append(i)
 
     if ok == 0:
@@ -97,7 +102,7 @@ def main():
 
     collected.sort(key=lambda i: i["published"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     items = [
-        {"source": i["source"], "title": i["title"], "url": i["url"],
+        {"source": i["source"], "topic": i["topic"], "title": i["title"], "url": i["url"],
          "published": i["published"].strftime("%Y-%m-%dT%H:%M:%SZ") if i["published"] else None}
         for i in collected[: args.max_items]
     ]

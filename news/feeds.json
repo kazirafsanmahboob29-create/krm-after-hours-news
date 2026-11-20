@@ -5,13 +5,27 @@
       "source": "EIA",
       "url": "https://www.eia.gov/rss/todayinenergy.xml",
       "enabled": true,
-      "checked": "Verified RSS from https://www.eia.gov/tools/rssfeeds/. Reuse policy: https://www.eia.gov/about/copyrights_reuse.php."
+      "checked": "Verified RSS from https://www.eia.gov/tools/rssfeeds/. Reuse policy: https://www.eia.gov/about/copyrights_reuse.php.",
+      "topic": "energy"
     },
     {
       "source": "Federal Reserve",
       "url": "https://www.federalreserve.gov/feeds/press_all.xml",
       "enabled": true,
-      "checked": "Verified All Press Releases RSS from https://www.federalreserve.gov/feeds/. Reuse policy: https://www.federalreserve.gov/disclaimer.htm."
+      "checked": "Verified All Press Releases RSS from https://www.federalreserve.gov/feeds/. Reuse policy: https://www.federalreserve.gov/disclaimer.htm.",
+      "topic": "economics"
+    },
+    {
+      "source": "arXiv",
+      "topic": "ai",
+      "url": "https://rss.arxiv.org/rss/cs.AI",
+      "enabled": true
+    },
+    {
+      "source": "BIS",
+      "topic": "economics",
+      "url": "https://www.bis.org/doclist/cbspeeches.rss",
+      "enabled": true
     }
   ]
 }
