@@ -9,3 +9,10 @@ python3 news/fetch_news.py --out docs/news.json
 For the dedicated GitHub repository, copy this `news/` directory and `.github/workflows/news.yml` from the project root. In Settings → Pages, choose GitHub Actions as the source. Run **Update news** once manually. The workflow deploys the generated JSON directly to Pages and runs hourly afterward. A failed feed run leaves the last successful Pages deployment available.
 
 Before setting `newsUrl` in `city/places.js`, verify that the deployed `news.json` contains items and returns a CORS header allowing the portfolio origin.
+
+The AI list uses the arXiv search API (with the arXiv RSS feed as a backup)
+and OpenAI’s release feed. EIA, BIS and Federal Reserve items come from their
+official publisher feeds. Only titles, links, source names and publication
+dates are distributed. When a publisher fails, the workflow can carry forward
+its headlines from the last public snapshot for up to 14 days, labeled saved.
+If all publishers fail, the last deployment stays in place.

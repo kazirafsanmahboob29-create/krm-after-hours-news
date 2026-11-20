@@ -21,7 +21,7 @@ import json
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -57,37 +57,74 @@ def read_feed(url, timeout=20):
     for it in root.iter(RSS1 + "item"):
         items.append((it.findtext(RSS1 + "title"), it.findtext(RSS1 + "link"), parse_date(it.findtext(DC + "date"))))
     for it in root.iter(ATOM + "entry"):  # Atom
-        link = it.find(ATOM + "link")
-        href = link.get("href") if link is not None else None
-        items.append((it.findtext(ATOM + "title"), href, parse_date(it.findtext(ATOM + "updated") or it.findtext(ATOM + "published"))))
+        link = it.find(ATOM + "link[@rel='alternate']")
+        href = link.get("href") if link is not None else it.findtext(ATOM + "id")
+        items.append((it.findtext(ATOM + "title"), href, parse_date(it.findtext(ATOM + "published") or it.findtext(ATOM + "updated"))))
     out = []
     for title, link, when in items:
         title = " ".join((title or "").split())
         link = (link or "").strip()
+        if link.startswith("http://arxiv.org/abs/"):
+            link = "https://" + link.removeprefix("http://")
         if title and link.startswith("https://"):
             out.append({"title": title, "url": link, "published": when})
     return out
+
+
+def fetch_source(feed):
+    try:
+        items = read_feed(feed["url"])
+        if items:
+            return items
+        raise ValueError("no usable headlines")
+    except (OSError, ET.ParseError, ValueError):
+        if not feed.get("fallback_url"):
+            raise
+        items = read_feed(feed["fallback_url"])
+        if not items:
+            raise ValueError("no usable headlines in backup feed")
+        return items
+
+
+def recent_saved_items(url, failed, now):
+    if not url or not failed:
+        return []
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.load(response)
+    except (OSError, ValueError) as error:
+        print(f"warning: previous headline snapshot unavailable: {error}", file=sys.stderr)
+        return []
+    saved = []
+    for item in data.get("items", []):
+        if (item.get("source"), item.get("topic")) not in failed:
+            continue
+        when = parse_date(item.get("published"))
+        if when and now - timedelta(days=14) <= when <= now and item.get("url", "").startswith("https://"):
+            saved.append({**item, "published": when, "cached": True})
+    return saved
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--feeds", default=str(HERE / "feeds.json"))
     ap.add_argument("--out", required=True)
-    ap.add_argument("--max-items", type=int, default=16)
+    ap.add_argument("--max-items", type=int, default=20)
+    ap.add_argument("--previous-url", help="Last published JSON for a temporary source outage")
     ap.add_argument("--per-feed", type=int, default=4)
     args = ap.parse_args()
 
     feeds = json.loads(Path(args.feeds).read_text(encoding="utf-8"))["feeds"]
-    collected, ok = [], 0
+    collected, failed, ok = [], set(), 0
     for f in feeds:
         if not f.get("enabled", True):
             continue
         try:
-            items = read_feed(f["url"])
-            if not items:
-                raise ValueError("no usable headlines")
+            items = fetch_source(f)
             ok += 1
         except Exception as e:  # keep going if one feed fails
+            failed.add((f['source'], f['topic']))
             print(f"warning: {f['source']} failed: {e}", file=sys.stderr)
             continue
         items.sort(key=lambda i: i["published"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
@@ -100,13 +137,16 @@ def main():
         print("error: no feed could be read; output not changed", file=sys.stderr)
         return 1
 
+    now = datetime.now(timezone.utc)
+    collected.extend(recent_saved_items(args.previous_url, failed, now))
     collected.sort(key=lambda i: i["published"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     items = [
         {"source": i["source"], "topic": i["topic"], "title": i["title"], "url": i["url"],
-         "published": i["published"].strftime("%Y-%m-%dT%H:%M:%SZ") if i["published"] else None}
+         "published": i["published"].strftime("%Y-%m-%dT%H:%M:%SZ") if i["published"] else None,
+         **({"cached": True} if i.get("cached") else {})}
         for i in collected[: args.max_items]
     ]
-    data = {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "items": items}
+    data = {"updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "items": items}
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

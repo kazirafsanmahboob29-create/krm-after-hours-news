@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Fetch feeds
-        run: python news/fetch_news.py --out docs/news.json
+        run: >-
+          python news/fetch_news.py --out docs/news.json
+          --previous-url https://kazirafsanmahboob29-create.github.io/krm-after-hours-news/news.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
