@@ -20,19 +20,22 @@
       "topic": "ai",
       "url": "https://export.arxiv.org/api/query?search_query=cat%3Acs.AI&start=0&max_results=8&sortBy=submittedDate&sortOrder=descending",
       "enabled": true,
-      "fallback_url": "https://rss.arxiv.org/rss/cs.AI"
+      "fallback_url": "https://rss.arxiv.org/rss/cs.AI",
+      "checked": "Verified Atom at the configured arXiv API URL and RSS at the fallback URL on 2026-11-22. API and RSS terms: https://info.arxiv.org/help/api/tou.html."
     },
     {
       "source": "BIS",
       "topic": "economics",
       "url": "https://www.bis.org/doclist/cbspeeches.rss",
-      "enabled": true
+      "enabled": true,
+      "checked": "Verified RSS at https://www.bis.org/doclist/cbspeeches.rss on 2026-11-22. Terms: https://www.bis.org/about/terms-conditions."
     },
     {
       "source": "OpenAI",
       "topic": "ai",
       "url": "https://openai.com/news/rss.xml",
-      "enabled": true
+      "enabled": true,
+      "checked": "Verified RSS at https://openai.com/news/rss.xml on 2026-11-22. General terms: https://openai.com/policies/terms-of-use/. No separate RSS reuse terms found."
     }
   ]
 }
