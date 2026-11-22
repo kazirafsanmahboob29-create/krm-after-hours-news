@@ -22,6 +22,11 @@ jobs:
         run: >-
           python news/fetch_news.py --out docs/news.json
           --previous-url https://kazirafsanmahboob29-create.github.io/krm-after-hours-news/news.json
+      - name: Fetch New England grid demand
+        continue-on-error: true
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python news/fetch_grid.py --out docs/grid.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
