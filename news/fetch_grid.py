@@ -46,7 +46,11 @@ def read_grid(key, now):
     week = [demand for period, demand in values.items() if period >= cutoff]
     if len(week) < 2:
         raise ValueError("Insufficient weekly demand data")
+    # Do not chart across missing hours. Older clients can still use the current reading.
+    hours = [latest - timedelta(hours=offset) for offset in range(23, -1, -1)]
+    history = {"history_mw": [values[hour] for hour in hours]} if all(hour in values for hour in hours) else {}
     return {
+        **history,
         "load_mw": values[latest],
         "period_utc": latest.isoformat(timespec="seconds").replace("+00:00", "Z"),
         "week_min_mw": min(week),
